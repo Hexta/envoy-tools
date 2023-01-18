@@ -1,0 +1,92 @@
+package util
+
+import (
+	"fmt"
+	"strings"
+)
+
+type LineMove struct {
+	Line   string
+	OldPos int
+	NewPos int
+}
+
+type Changes struct {
+	Group     string
+	Added     []string
+	Removed   []string
+	Reordered []*LineMove
+	Modified  map[string]string
+}
+
+func (c *Changes) Empty() bool {
+	return len(c.Added) == 0 && len(c.Modified) == 0 && len(c.Removed) == 0
+}
+
+func FormatChanges(changesList []*Changes, indent int) string {
+	var sb strings.Builder
+
+	for _, changes := range changesList {
+		if changes.Empty() {
+			continue
+		}
+
+		//TODO handle printf errors
+		_, _ = fmt.Fprintf(&sb, "%s\n", changes.Group)
+
+		if len(changes.Added) > 0 {
+			_, _ = fmt.Fprintf(&sb, "%sadded\n", strings.Repeat(" ", indent))
+			for _, it := range changes.Added {
+				_, err := fmt.Fprintf(&sb, "%s%s\n", strings.Repeat(" ", 2*indent), it)
+				if err != nil {
+					//TODO handle printf errors
+					continue
+				}
+			}
+		}
+
+		if len(changes.Removed) > 0 {
+			_, _ = fmt.Fprintf(&sb, "%sremoved\n", strings.Repeat(" ", indent))
+			for _, it := range changes.Removed {
+				_, err := fmt.Fprintf(&sb, "%s%s\n", strings.Repeat(" ", 2*indent), it)
+				if err != nil {
+					//TODO handle printf errors
+					continue
+				}
+			}
+		}
+
+		if len(changes.Modified) > 0 {
+			_, _ = fmt.Fprintf(&sb, "%smodified\n", strings.Repeat(" ", indent))
+			for name, diff := range changes.Modified {
+				_, err := fmt.Fprintf(&sb, "%s%s\n", strings.Repeat(" ", 2*indent), name)
+				if err != nil {
+					//TODO handle printf errors
+					continue
+				}
+
+				_, err = fmt.Fprintf(&sb, "%s%s\n", strings.Repeat(" ", 3*indent), diff)
+				if err != nil {
+					//TODO handle printf errors
+					continue
+				}
+			}
+		}
+
+		if len(changes.Reordered) > 0 {
+			_, _ = fmt.Fprintf(&sb, "%sreordered\n", strings.Repeat(" ", indent))
+			for _, lineMove := range changes.Reordered {
+				_, err := fmt.Fprintf(
+					&sb,
+					"%s%s [%d] -> [%d]\n", strings.Repeat(" ", 2*indent), lineMove.Line, lineMove.OldPos, lineMove.NewPos,
+				)
+				if err != nil {
+					//TODO handle printf errors
+					continue
+				}
+			}
+		}
+	}
+
+	return sb.String()
+}
