@@ -1,0 +1,14 @@
+---
+linters:
+  enable:
+    - contextcheck
+    - cyclop
+    - errcheck
+    - goimports
+    - gosimple
+    - govet
+    - ineffassign
+    - prealloc
+    - staticcheck
+    - typecheck
+    - unused
