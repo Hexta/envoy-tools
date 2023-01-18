@@ -1,0 +1,24 @@
+---
+linters:
+  enable:
+    - contextcheck
+    - cyclop
+    - errcheck
+    - goimports
+    - gosimple
+    - govet
+    - ineffassign
+    - prealloc
+    - staticcheck
+    - typecheck
+    - unused
+
+linters-settings:
+  cyclop:
+    max-complexity: 20
+  govet:
+    enable:
+      - fieldalignment
+
+run:
+  timeout: 10m
