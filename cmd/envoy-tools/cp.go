@@ -1,10 +1,10 @@
-package envoy_tools
+package main
 
 import (
 	"fmt"
 	"strings"
 
-	"envoy-tools/pkg/util"
+	"github.com/Hexta/envoy-tools/pkg/util"
 
 	discoveryv3 "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	log "github.com/sirupsen/logrus"

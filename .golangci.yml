@@ -12,3 +12,7 @@ linters:
     - staticcheck
     - typecheck
     - unused
+
+linters-settings:
+  cyclop:
+    max-complexity: 20

@@ -1,15 +1,17 @@
-package envoy_tools
+package main
 
 import (
 	"fmt"
 	"os"
 
+	"github.com/Hexta/envoy-tools/pkg/version"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "envoy-tools",
-	Short: "Envoy toolbox",
+	Use:     "envoy-tools",
+	Short:   "Envoy toolbox",
+	Version: version.Version(),
 	Run: func(cmd *cobra.Command, args []string) {
 	},
 }
