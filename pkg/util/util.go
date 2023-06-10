@@ -35,17 +35,17 @@ func (t DiffEntityType) String() string {
 }
 
 type EnvoyCPResource struct {
-	Version string
 	Items   map[string]interface{}
+	Version string
 }
 
 type EnvoyCPSnapshot struct {
-	Resources  []EnvoyCPResource
 	VersionMap interface{}
+	Resources  []EnvoyCPResource
 }
 
-func PrintDiffInterface(a map[string]interface{}, b map[string]interface{}, entityType *DiffEntityType) error {
-	diff, err := FastDiffInterface(a, b, entityType)
+func PrintDiffMap(a map[string]interface{}, b map[string]interface{}, entityType *DiffEntityType) error {
+	diff, err := FastDiffMap(a, b, entityType)
 
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func PrintDiffInterface(a map[string]interface{}, b map[string]interface{}, enti
 	return nil
 }
 
-func FastDiffInterface(a map[string]interface{}, b map[string]interface{}, entityType *DiffEntityType) (string, error) {
+func FastDiffMap(a map[string]interface{}, b map[string]interface{}, entityType *DiffEntityType) (string, error) {
 	diffs := make([]*Changes, 0)
 
 	switch *entityType {

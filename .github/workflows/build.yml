@@ -1,0 +1,62 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      upload_artifacts:
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.53
+          args: --timeout=10m
+
+  build:
+    strategy:
+      matrix:
+        arch:
+          - arm64
+          - amd64
+        os:
+          - linux
+          - darwin
+    runs-on: ubuntu-latest
+    env:
+      GOOS: ${{ matrix.os }}
+      GOARCH: ${{ matrix.arch }}
+    needs:
+      - lint
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Create dist dir
+        run:
+          mkdir dist
+
+      - name: Build
+        run: make build
+
+      - name: Test
+        run: go test -v ./...
+
+      - name: Archive dist artifacts
+        uses: actions/upload-artifact@v3
+        if: inputs.upload_artifacts
+        with:
+          name: dist-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            dist/*
+          retention-days: 3

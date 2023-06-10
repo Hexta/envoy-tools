@@ -1,68 +1,62 @@
-package envoy_tools
+package main
 
 import (
 	"fmt"
 	"strings"
+	"sync"
 
-	"envoy-tools/pkg/util"
+	"github.com/Hexta/envoy-tools/pkg/util"
 
-	discoveryv3 "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 type CmdOptions struct {
-	Urls             *[]string
-	DiffEntityString string
+	Urls               *[]string
+	DiffEntityString   string
+	NodeId             string
+	MaxGrpcMessageSize int
 }
 
 var cmdOptions = CmdOptions{}
 
-var cpNextCmd = &cobra.Command{
+var cpCmd = &cobra.Command{
 	Use:   "cp",
 	Short: "Compare Envoy Control Plane configs",
 	Run: func(cmd *cobra.Command, args []string) {
 	},
 }
-var cpNextDiffCmd = &cobra.Command{
-	Use:   "diff FILE FILE",
+var cpDiffCmd = &cobra.Command{
+	Use:   "diff IP:PORT IP:PORT",
 	Short: "Compare Envoy Control Plane configs",
 	Run: func(cmd *cobra.Command, args []string) {
 		cmdOptions.Urls = &args
 
-		cmList := make([]map[string]interface{}, 0, 2)
+		cmList := make([]map[string]interface{}, 2)
 
 		det, err := util.NewDiffEntityType(cmdOptions.DiffEntityString)
 		if err != nil {
 			log.Fatalf("Invalid diff entity: %v", err)
 		}
 
-		var resources *discoveryv3.DiscoveryResponse
-		for _, url := range *cmdOptions.Urls {
-			var err error
-			switch *det {
-			case util.CdsDiff:
-				resources, err = util.FetchEnvoyClusters(url)
+		var wg sync.WaitGroup
+
+		for idx, url := range *cmdOptions.Urls {
+			wg.Add(1)
+			go func(idx int, url string) {
+				defer wg.Done()
+				cm, err := util.FetchDiscoveryResourcesAsMap(det, url, cmdOptions.MaxGrpcMessageSize, cmdOptions.NodeId)
+
 				if err != nil {
-					log.Fatalf("Failed to fetch resources %v: %v", url, err)
+					log.Fatalf("Failed to convert clusters to map %v", err)
 				}
-			case util.RdsDiff:
-				resources, err = util.FetchEnvoyRoutes(url)
-				if err != nil {
-					log.Fatalf("Failed to fetch resources %v: %v", url, err)
-				}
-			}
 
-			cm, err := util.DiscoveryResourcesAsMap(resources)
-
-			if err != nil {
-				log.Fatalf("Failed to convert clusters to map %v", err)
-			}
-
-			cmList = append(cmList, cm)
+				cmList[idx] = cm
+			}(idx, url)
 		}
+		wg.Wait()
 
-		err = util.PrintDiffInterface(cmList[0], cmList[1], det)
+		err = util.PrintDiffMap(cmList[0], cmList[1], det)
 		if err != nil {
 			log.Fatalf("Failed to print diff: %v", err)
 		}
@@ -72,9 +66,16 @@ var cpNextDiffCmd = &cobra.Command{
 }
 
 func init() {
-	cpNextCmd.AddCommand(cpNextDiffCmd)
+	cpCmd.AddCommand(cpDiffCmd)
+	cpCmd.PersistentFlags().IntVar(&cmdOptions.MaxGrpcMessageSize, "max-grpc-message-size", 100*1024*1024, "Max size of gRPC message")
 
-	cpNextDiffCmd.Flags().StringVarP(
+	cpCmd.PersistentFlags().StringVar(&cmdOptions.NodeId, "node-id", "", "Node id used in discovery requests")
+	err := cpCmd.MarkPersistentFlagRequired("node-id")
+	if err != nil {
+		log.Fatalf("Failed to configure CLI: %v", err)
+	}
+
+	cpDiffCmd.Flags().StringVarP(
 		&cmdOptions.DiffEntityString,
 		"entity-type",
 		"t",
@@ -86,5 +87,5 @@ func init() {
 		}, ",")),
 	)
 
-	rootCmd.AddCommand(cpNextCmd)
+	rootCmd.AddCommand(cpCmd)
 }
