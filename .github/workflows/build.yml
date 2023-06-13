@@ -40,6 +40,8 @@ jobs:
       - name: Test
         run: go test -v ./...
 
+# some comment
+
       - name: Archive dist artifacts
         uses: actions/upload-artifact@v3
         if: inputs.upload_artifacts
