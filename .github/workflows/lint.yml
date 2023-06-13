@@ -45,10 +45,10 @@ jobs:
           path: ~/.cache/pre-commit
           key: ${{ runner.os }}-pre-commit
 
-#      - name: Dump GitHub context
-#        env:
-#          GITHUB_CONTEXT: ${{ toJson(github) }}
-#        run: echo "$GITHUB_CONTEXT"
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
 
       - uses: actions/setup-python@v4
         with:
@@ -63,4 +63,3 @@ jobs:
           --to-ref ${{ github.event.pull_request.head.sha || github.event.after }}
         env:
           SKIP: golangci-lint
-        if: github.event_name == 'pull_request'
