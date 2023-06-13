@@ -63,4 +63,3 @@ jobs:
           --to-ref ${{ github.event.pull_request.head.sha || github.event.after }}
         env:
           SKIP: golangci-lint
-        if: github.event_name == 'pull_request'
