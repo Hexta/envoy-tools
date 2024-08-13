@@ -7,6 +7,7 @@ on:
 jobs:
   auto-update:
     permissions:
+      contents: read
       pull-requests: write
     runs-on: ubuntu-latest
     timeout-minutes: 5
