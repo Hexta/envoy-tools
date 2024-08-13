@@ -13,6 +13,11 @@ ifdef GOARCH
 		BIN_NAME_SUFFIX := $(BIN_NAME_SUFFIX)-$(GOARCH)
 endif
 
+.PHONY: build
 build:
 	mkdir -p dist
 	go build -ldflags=$(LDFLAGS) -o dist/envoy-tools$(BIN_NAME_SUFFIX) -v ./cmd/envoy-tools
+
+.PHONY: test
+test:
+	go test -v ./...
