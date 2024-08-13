@@ -6,6 +6,8 @@ on:
     - cron: 0 8 1 * * # Every first day of month at 08:00 UTC
 jobs:
   auto-update:
+    permissions:
+      pull-requests: write
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -24,11 +26,21 @@ jobs:
         run: pre-commit autoupdate
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
+        uses: actions/github-script@v6
         with:
-          token: ${{ secrets.UIP_GITHUB_API_TOKEN }}
-          branch: INFRA-0-auto-update-pre-commit-hooks
-          title: INFRA-0 Auto-update pre-commit hooks
-          commit-message: Auto-update pre-commit hooks
-          body: Update pre-commit tools to the latest version
-          labels: dependencies,sre-kubernetes
+          script: |
+            const { repo, owner } = context.repo;
+            const result = await github.rest.pulls.create({
+              title: 'Auto-update pre-commit hooks',
+              owner,
+              repo,
+              head: '${{ github.ref_name }}',
+              base: 'main',
+              body: 'Update pre-commit tools to the latest version'
+            });
+            github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: result.data.number,
+              labels: ['feature', 'automated pr']
+            });
