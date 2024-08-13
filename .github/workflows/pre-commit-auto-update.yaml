@@ -27,21 +27,6 @@ jobs:
         run: pre-commit autoupdate
 
       - name: Create Pull Request
-        uses: actions/github-script@v6
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          script: |
-            const { repo, owner } = context.repo;
-            const result = await github.rest.pulls.create({
-              title: 'Auto-update pre-commit hooks',
-              owner,
-              repo,
-              head: '${{ github.ref_name }}',
-              base: 'main',
-              body: 'Update pre-commit tools to the latest version'
-            });
-            github.rest.issues.addLabels({
-              owner,
-              repo,
-              issue_number: result.data.number,
-              labels: ['feature', 'automated pr']
-            });
+          commit_message: pre-commit auto-update
