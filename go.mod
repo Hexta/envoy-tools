@@ -6,7 +6,7 @@ require (
 	github.com/envoyproxy/go-control-plane v0.11.1
 	github.com/qri-io/deepdiff v0.2.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.1
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	google.golang.org/grpc v1.56.3
 	google.golang.org/protobuf v1.34.2
