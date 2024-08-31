@@ -52,7 +52,7 @@ func NewXDSClient(
 
 func (c *XDSClient) Connect() error {
 	var err error
-	c.conn, err = grpc.Dial(c.url, grpcDialOptions...)
+	c.conn, err = grpc.NewClient(c.url, grpcDialOptions...)
 	if err != nil {
 		return err
 	}
