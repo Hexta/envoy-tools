@@ -10,25 +10,25 @@ jobs:
       contents: write
     steps:
       - name: Download dist
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: dist-linux-amd64
           path: dist
 
       - name: Download dist
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: dist-linux-arm64
           path: dist
 
       - name: Download dist
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: dist-darwin-amd64
           path: dist
 
       - name: Download dist
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: dist-darwin-arm64
           path: dist
