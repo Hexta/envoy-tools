@@ -3,7 +3,7 @@ module github.com/Hexta/envoy-tools
 go 1.22.6
 
 require (
-	github.com/envoyproxy/go-control-plane v0.13.0
+	github.com/envoyproxy/go-control-plane v0.13.1
 	github.com/qri-io/deepdiff v0.2.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
