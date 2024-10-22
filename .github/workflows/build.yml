@@ -1,12 +1,7 @@
 name: Build
 
 on:
-  workflow_call:
-    inputs:
-      upload_artifacts:
-        type: boolean
-        required: false
-        default: false
+  workflow_call: {}
 
 jobs:
   build:
@@ -39,12 +34,3 @@ jobs:
 
       - name: Test
         run: go test -v ./...
-
-      - name: Archive dist artifacts
-        uses: actions/upload-artifact@v4
-        if: inputs.upload_artifacts
-        with:
-          name: dist-${{ matrix.os }}-${{ matrix.arch }}
-          path: |
-            dist/*
-          retention-days: 3
