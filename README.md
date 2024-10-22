@@ -15,9 +15,13 @@ go install github.com/Hexta/envoy-tools@latest
 
 ### Examples
 
-* Compare clusters configuration returned by Envoy Control Plane `envoy-cp-first` and `envoy-cp-second`
+* Compare CDS configuration returned by Envoy Control Plane `envoy-cp-first` and `envoy-cp-second`
     ```shell
-    envoy-tools cp --node-id node diff -t cds envoy-cp-first:18000 envoy-cp-second:18000
+    envoy-tools cp cds diff --node-id node envoy-cp-first:18000 envoy-cp-second:18000
+    ```
+* Compare RDS configuration returned by Envoy Control Plane `envoy-cp-first` and `envoy-cp-second`
+    ```shell
+    envoy-tools cp rds diff --node-id node envoy-cp-first:18000 envoy-cp-second:18000
     ```
 
 ## Contributing
