@@ -1,9 +1,10 @@
-package main
+package cmd
 
 import (
 	"os"
 
-	"github.com/Hexta/envoy-tools/pkg/version"
+	"github.com/Hexta/envoy-tools/cmd/envoy-tools/cmd/cp"
+	"github.com/Hexta/envoy-tools/internal/version"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -21,4 +22,8 @@ func Execute() {
 		log.Println(err)
 		os.Exit(1)
 	}
+}
+
+func init() {
+	rootCmd.AddCommand(cp.Cmd)
 }

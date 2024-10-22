@@ -1,10 +1,7 @@
 name: Lint
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_call: {}
 
 jobs:
   golangci-lint:
@@ -21,7 +18,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.59
+          version: v1.61
 
   gitleaks:
     runs-on: ubuntu-latest
@@ -63,7 +60,7 @@ jobs:
       - run: pre-commit install
       - run: >-
           pre-commit run
+          --hook-stage manual
           --from-ref ${{ github.event.pull_request.base.sha || github.event.before }}
           --to-ref ${{ github.event.pull_request.head.sha || github.event.after }}
-        env:
-          SKIP: golangci-lint
+          --show-diff-on-failure

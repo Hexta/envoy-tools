@@ -10,12 +10,12 @@ import (
 	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	routev3 "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/health_check/event_sinks/file/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/retry/host/previous_hosts/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	cdspbv3 "github.com/envoyproxy/go-control-plane/envoy/service/cluster/v3"
 	discoveryv3 "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	rdspbv3 "github.com/envoyproxy/go-control-plane/envoy/service/route/v3"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -142,26 +142,4 @@ func FetchEnvoyRoutes(client *XDSClient) (*discoveryv3.DiscoveryResponse, error)
 	}
 
 	return client.FetchRoutes()
-}
-
-func FetchDiscoveryResourcesAsMap(det *DiffEntityType, url string, maxGrpcMessageSize int, nodeId string) (map[string]interface{}, error) {
-	var resources *discoveryv3.DiscoveryResponse
-	var err error
-	grpcCallOptions := []grpc.CallOption{grpc.MaxCallRecvMsgSize(maxGrpcMessageSize)}
-	xdsClient := NewXDSClient(url, grpcCallOptions, grpcDialOptions, nodeId)
-
-	switch *det {
-	case CdsDiff:
-		resources, err = FetchEnvoyClusters(xdsClient)
-		if err != nil {
-			log.Fatalf("Failed to fetch resources %v: %v", url, err)
-		}
-	case RdsDiff:
-		resources, err = FetchEnvoyRoutes(xdsClient)
-		if err != nil {
-			log.Fatalf("Failed to fetch resources %v: %v", url, err)
-		}
-	}
-
-	return DiscoveryResourcesAsMap(resources)
 }

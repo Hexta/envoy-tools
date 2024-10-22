@@ -16,7 +16,11 @@ repos:
     rev: v0.5.1
     hooks:
       - id: go-build
+        stages:
+          - pre-commit
       - id: go-mod-tidy
+        stages:
+          - pre-commit
 
   - repo: https://github.com/golangci/golangci-lint
     rev: v1.61.0
@@ -26,6 +30,8 @@ repos:
         types: [go]
         language: golang
         pass_filenames: false
+        stages:
+          - pre-commit
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.19.3

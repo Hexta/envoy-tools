@@ -1,56 +1,13 @@
-package util
+package diff
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/qri-io/deepdiff"
+	"github.com/google/go-cmp/cmp"
 	"golang.org/x/exp/maps"
 )
 
-func DiffClusters(a map[string]interface{}, b map[string]interface{}) (*Changes, error) {
-	dd := deepdiff.New()
-	ctx := context.Background()
-
-	added := make([]string, 0)
-	removed := make([]string, 0)
-	modified := make(map[string]string)
-
-	for clusterName := range a {
-		if _, ok := b[clusterName]; !ok {
-			removed = append(removed, clusterName)
-		} else {
-			diffs, stats, err := dd.StatDiff(ctx, a[clusterName], b[clusterName])
-			if err != nil {
-				return nil, err
-			}
-
-			if stats.NodeChange() == 0 || (diffs.Len() == 1 && diffs[0].Deltas == nil) {
-				continue
-			}
-
-			diffStr, err := deepdiff.FormatPrettyString(diffs, true)
-			if err != nil {
-				return nil, err
-			}
-
-			modified[clusterName] = diffStr
-		}
-	}
-
-	for clusterName := range b {
-		if _, ok := a[clusterName]; !ok {
-			added = append(added, clusterName)
-		}
-	}
-
-	return &Changes{Group: "clusters", Added: added, Removed: removed, Modified: modified}, nil
-}
-
-func DiffVirtualHosts(a map[string]interface{}, b map[string]interface{}) (*Changes, error) {
-	dd := deepdiff.New()
-	ctx := context.Background()
-
+func VirtualHosts(a map[string]interface{}, b map[string]interface{}) (*Changes, error) {
 	added := make([]string, 0)
 	removed := make([]string, 0)
 	modified := make(map[string]string)
@@ -111,18 +68,10 @@ func DiffVirtualHosts(a map[string]interface{}, b map[string]interface{}) (*Chan
 			continue
 		}
 
-		diffs, stats, err := dd.StatDiff(ctx, vhmA[vhName], vhmB[vhName])
-		if err != nil {
-			return nil, err
-		}
+		diffStr := cmp.Diff(vhmA[vhName], vhmB[vhName])
 
-		if stats.NodeChange() == 0 || (diffs.Len() == 1 && diffs[0].Deltas == nil) {
+		if diffStr == "" {
 			continue
-		}
-
-		diffStr, err := deepdiff.FormatPrettyString(diffs, true)
-		if err != nil {
-			return nil, err
 		}
 
 		modified[vhName] = diffStr
@@ -134,7 +83,7 @@ func DiffVirtualHosts(a map[string]interface{}, b map[string]interface{}) (*Chan
 
 	for idx, vhName := range vhNamesB {
 		if _, ok := vhmA[vhName]; !ok {
-			added = append(removed, vhName)
+			added = append(added, vhName)
 			delete(reorderedMap, vhName)
 			continue
 		}
