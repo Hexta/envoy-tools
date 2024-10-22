@@ -8,7 +8,7 @@ A toolset for debugging Envoy and Envoy Control Plane configuration:
 ### Installation
 
 ```shell
-go install github.com/Hexta/envoy-tools@latest
+go install github.com/Hexta/envoy-tools/cmd/envoy-tools@latest
 ```
 
 ## Usage
