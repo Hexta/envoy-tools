@@ -16,6 +16,7 @@ import (
 	cdspbv3 "github.com/envoyproxy/go-control-plane/envoy/service/cluster/v3"
 	discoveryv3 "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	rdspbv3 "github.com/envoyproxy/go-control-plane/envoy/service/route/v3"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -103,7 +104,7 @@ func DiscoveryResourcesAsMap(clusters *discoveryv3.DiscoveryResponse) (map[strin
 
 			resourcesMap[mt.GetName()] = pbs.AsMap()
 			if mt.GetName() == "" {
-				fmt.Printf("OPA\n")
+				log.Errorf("Clusters name is empty")
 			}
 
 		case *routev3.RouteConfiguration:
@@ -125,21 +126,36 @@ func DiscoveryResourcesAsMap(clusters *discoveryv3.DiscoveryResponse) (map[strin
 	return resourcesMap, nil
 }
 
-func FetchEnvoyClusters(client *XDSClient) (*discoveryv3.DiscoveryResponse, error) {
+func FetchClusters(client *XDSClient) (*discoveryv3.DiscoveryResponse, error) {
 	err := client.Connect()
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to xDS API: %w", err)
 	}
 
 	return client.FetchClusters()
 }
-func FetchEnvoyRoutes(client *XDSClient) (*discoveryv3.DiscoveryResponse, error) {
-	err := client.Connect()
 
+func FetchClustersAsMap(client *XDSClient) (map[string]interface{}, error) {
+	clusters, err := FetchClusters(client)
+	if err != nil {
+		return nil, err
+	}
+	return DiscoveryResourcesAsMap(clusters)
+}
+
+func FetchRoutes(client *XDSClient) (*discoveryv3.DiscoveryResponse, error) {
+	err := client.Connect()
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to xDS API: %w", err)
 	}
 
 	return client.FetchRoutes()
+}
+
+func FetchRoutesAsMap(client *XDSClient) (map[string]interface{}, error) {
+	routes, err := FetchRoutes(client)
+	if err != nil {
+		return nil, err
+	}
+	return DiscoveryResourcesAsMap(routes)
 }

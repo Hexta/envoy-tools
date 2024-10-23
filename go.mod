@@ -5,7 +5,6 @@ go 1.23.2
 require (
 	github.com/envoyproxy/go-control-plane v0.13.1
 	github.com/google/go-cmp v0.6.0
-	github.com/qri-io/deepdiff v0.2.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1

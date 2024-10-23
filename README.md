@@ -1,7 +1,6 @@
 # envoy-tools
 
-A toolset for debugging Envoy and Envoy Control Plane configuration:
-* `cp diff` displays a diff between configuration produced by two control planes
+A toolset for debugging Envoy and Envoy Control Plane configuration.
 
 ## Getting Started
 

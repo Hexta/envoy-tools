@@ -7,7 +7,21 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func VirtualHosts(a map[string]interface{}, b map[string]interface{}) (*Changes, error) {
+type VirtualHostsDiffOptions struct {
+	IncludedVirtualHosts []string
+}
+
+func (v VirtualHostsDiffOptions) GetIncludedVirtualHostsAsMap() map[string]struct{} {
+	m := make(map[string]struct{})
+
+	for _, virtualHost := range v.IncludedVirtualHosts {
+		m[virtualHost] = struct{}{}
+	}
+
+	return m
+}
+
+func VirtualHosts(a map[string]interface{}, b map[string]interface{}, opts VirtualHostsDiffOptions) (*Changes, error) {
 	added := make([]string, 0)
 	removed := make([]string, 0)
 	modified := make(map[string]string)
@@ -38,7 +52,9 @@ func VirtualHosts(a map[string]interface{}, b map[string]interface{}) (*Changes,
 	vhmA := make(map[string]interface{}, len(vhlA))
 	vhmB := make(map[string]interface{}, len(vhlB))
 
-	reorderedMap := make(map[string]*LineMove, 0)
+	reorderedMap := make(map[string]*LineMove)
+
+	includedHosts := opts.GetIncludedVirtualHostsAsMap()
 
 	for _, vhInfoInterface := range vhlA {
 		vhInfo := vhInfoInterface.(map[string]interface{})
@@ -63,6 +79,10 @@ func VirtualHosts(a map[string]interface{}, b map[string]interface{}) (*Changes,
 	}
 
 	for idx, vhName := range vhNamesA {
+		if !isVirtualHostIncluded(vhName, includedHosts) {
+			continue
+		}
+
 		if _, ok := vhmB[vhName]; !ok {
 			removed = append(removed, vhName)
 			continue
@@ -82,6 +102,10 @@ func VirtualHosts(a map[string]interface{}, b map[string]interface{}) (*Changes,
 	}
 
 	for idx, vhName := range vhNamesB {
+		if !isVirtualHostIncluded(vhName, includedHosts) {
+			continue
+		}
+
 		if _, ok := vhmA[vhName]; !ok {
 			added = append(added, vhName)
 			delete(reorderedMap, vhName)
@@ -100,4 +124,13 @@ func VirtualHosts(a map[string]interface{}, b map[string]interface{}) (*Changes,
 		Modified:  modified,
 		Reordered: maps.Values(reorderedMap),
 	}, nil
+}
+
+func isVirtualHostIncluded(vhName string, includedHosts map[string]struct{}) bool {
+	if len(includedHosts) == 0 {
+		return true
+	}
+
+	_, ok := includedHosts[vhName]
+	return ok
 }
