@@ -8,11 +8,9 @@ jobs:
     strategy:
       matrix:
         arch:
-          - arm64
           - amd64
         os:
           - linux
-          - darwin
     runs-on: ubuntu-latest
     env:
       GOOS: ${{ matrix.os }}
