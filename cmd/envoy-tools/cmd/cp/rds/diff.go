@@ -14,8 +14,8 @@ import (
 )
 
 var diffOptions = struct {
-	VirtualHost string
-	Indent      int
+	VirtualHosts []string
+	Indent       int
 }{}
 
 var diffCmd = &cobra.Command{
@@ -25,28 +25,18 @@ var diffCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		urls := args
 
-		cmList := make([]map[string]interface{}, 2)
-
 		grpcCallOptions := []grpc.CallOption{grpc.MaxCallRecvMsgSize(config.CpCmdGlobalOptions.MaxGrpcMessageSize)}
 		grpcDialOptions := []grpc.DialOption{
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 		}
 
-		var wg sync.WaitGroup
-		for idx, url := range urls {
-			wg.Add(1)
-			go func(idx int, url string) {
-				defer wg.Done()
-				cm, err := fetchEnvoyRoutes(url, grpcCallOptions, grpcDialOptions)
-				if err != nil {
-					log.WithError(err).Fatal("Failed to fetch routes")
-				}
-				cmList[idx] = cm
-			}(idx, url)
-		}
-		wg.Wait()
+		cmList := fetchAllRoutes(urls, grpcCallOptions, grpcDialOptions)
 
-		changes, err := diff.VirtualHosts(cmList[0], cmList[1])
+		vhDiffOpts := diff.VirtualHostsDiffOptions{
+			IncludedVirtualHosts: diffOptions.VirtualHosts,
+		}
+
+		changes, err := diff.VirtualHosts(cmList[0], cmList[1], vhDiffOpts)
 		if err != nil {
 			log.WithError(err).Fatal("Failed to diff routes")
 		}
@@ -56,23 +46,28 @@ var diffCmd = &cobra.Command{
 	},
 }
 
-func fetchEnvoyRoutes(url string, grpcCallOptions []grpc.CallOption, grpcDialOptions []grpc.DialOption) (map[string]interface{}, error) {
-	xdsClient := util.NewXDSClient(url, grpcCallOptions, grpcDialOptions, config.CpCmdGlobalOptions.NodeID)
+func fetchAllRoutes(urls []string, grpcCallOptions []grpc.CallOption, grpcDialOptions []grpc.DialOption) []map[string]interface{} {
+	cmList := make([]map[string]interface{}, 2)
 
-	resp, err := util.FetchEnvoyRoutes(xdsClient)
-	if err != nil {
-		log.Fatalf("Failed to fetch routes %v", err)
+	var wg sync.WaitGroup
+	for idx, url := range urls {
+		wg.Add(1)
+		go func(idx int, url string) {
+			defer wg.Done()
+			xdsClient := util.NewXDSClient(url, grpcCallOptions, grpcDialOptions, config.CpCmdGlobalOptions.NodeID)
+			cm, err := util.FetchRoutesAsMap(xdsClient)
+			if err != nil {
+				log.WithError(err).Fatal("Failed to fetch routes")
+			}
+			cmList[idx] = cm
+		}(idx, url)
 	}
+	wg.Wait()
 
-	cm, err := util.DiscoveryResourcesAsMap(resp)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert routes to map %v", err)
-	}
-
-	return cm, nil
+	return cmList
 }
 
 func init() {
 	diffCmd.Flags().IntVarP(&diffOptions.Indent, "indent", "i", 4, "Indentation level")
-	diffCmd.Flags().StringVarP(&diffOptions.VirtualHost, "virtualhost", "r", "", "Virtual host name")
+	diffCmd.Flags().StringSliceVarP(&diffOptions.VirtualHosts, "virtualhost", "r", []string{}, "Virtual host name")
 }

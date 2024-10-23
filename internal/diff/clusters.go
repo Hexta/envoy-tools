@@ -1,32 +1,37 @@
 package diff
 
 import (
-	"context"
-
 	"github.com/google/go-cmp/cmp"
-	"github.com/qri-io/deepdiff"
 )
 
-func Clusters(ctx context.Context, a map[string]interface{}, b map[string]interface{}) (*Changes, error) {
-	dd := deepdiff.New()
+type ClustersDiffOptions struct {
+	IncludedClusters []string
+}
 
+func (c ClustersDiffOptions) GetIncludedClustersAsMap() map[string]struct{} {
+	m := make(map[string]struct{})
+
+	for _, cluster := range c.IncludedClusters {
+		m[cluster] = struct{}{}
+	}
+
+	return m
+}
+
+func Clusters(a map[string]interface{}, b map[string]interface{}, opts ClustersDiffOptions) (*Changes, error) {
 	added := make([]string, 0)
 	removed := make([]string, 0)
 	modified := make(map[string]string)
+
+	includeClusters := opts.GetIncludedClustersAsMap()
+
+	a = filterIncludedClusters(a, includeClusters)
+	b = filterIncludedClusters(b, includeClusters)
 
 	for clusterName := range a {
 		if _, ok := b[clusterName]; !ok {
 			removed = append(removed, clusterName)
 		} else {
-			diffs, stats, err := dd.StatDiff(ctx, a[clusterName], b[clusterName])
-			if err != nil {
-				return nil, err
-			}
-
-			if stats.NodeChange() == 0 || (diffs.Len() == 1 && diffs[0].Deltas == nil) {
-				continue
-			}
-
 			diffStr := cmp.Diff(a[clusterName], b[clusterName])
 			modified[clusterName] = diffStr
 		}
@@ -39,4 +44,20 @@ func Clusters(ctx context.Context, a map[string]interface{}, b map[string]interf
 	}
 
 	return &Changes{Group: "clusters", Added: added, Removed: removed, Modified: modified}, nil
+}
+
+func filterIncludedClusters(clusters map[string]interface{}, includeClusters map[string]struct{}) map[string]interface{} {
+	if len(includeClusters) == 0 {
+		return clusters
+	}
+
+	filteredClusters := make(map[string]interface{}, len(clusters))
+
+	for name := range includeClusters {
+		if _, ok := clusters[name]; ok {
+			filteredClusters[name] = clusters[name]
+		}
+	}
+
+	return filteredClusters
 }
