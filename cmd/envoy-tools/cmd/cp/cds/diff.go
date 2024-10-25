@@ -3,10 +3,12 @@ package cds
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/Hexta/envoy-tools/internal/config"
 	"github.com/Hexta/envoy-tools/internal/diff"
+	"github.com/Hexta/envoy-tools/internal/format"
 	"github.com/Hexta/envoy-tools/internal/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -15,9 +17,10 @@ import (
 )
 
 var diffCmdOpts = struct {
-	Clusters []string
-	Indent   int
-	Stats    bool
+	Clusters     []string
+	Indent       int
+	OutputFormat string
+	Stats        bool
 }{}
 
 var diffCmd = &cobra.Command{
@@ -53,7 +56,21 @@ func diffCmdRunFunc(cmd *cobra.Command, args []string) {
 		log.WithError(err).Fatal("Failed to diff clusters")
 	}
 
-	diffStr := diff.FormatChanges(changes, diff.FormatOptions{Indent: diffCmdOpts.Indent, StatsOnly: diffCmdOpts.Stats})
+	var diffStr string
+
+	switch diffCmdOpts.OutputFormat {
+	case "text":
+		diffStr = format.ChangesAsText(changes, format.Options{Indent: diffCmdOpts.Indent, StatsOnly: diffCmdOpts.Stats})
+	case "yaml":
+		diffStr, err = format.YAML(changes)
+		if err != nil {
+			log.WithError(err).Fatal("Failed to format changes")
+			os.Exit(1)
+		}
+	default:
+		log.Fatalf("Unknown output format: %s", diffCmdOpts.OutputFormat)
+	}
+
 	fmt.Println(diffStr)
 }
 
@@ -82,4 +99,5 @@ func init() {
 	diffCmd.Flags().IntVarP(&diffCmdOpts.Indent, "indent", "i", 4, "Indentation level")
 	diffCmd.Flags().StringSliceVarP(&diffCmdOpts.Clusters, "cluster", "c", []string{}, "Cluster name")
 	diffCmd.Flags().BoolVarP(&diffCmdOpts.Stats, "stats", "s", false, "Display stats only")
+	diffCmd.Flags().StringVarP(&diffCmdOpts.OutputFormat, "output-format", "o", "text", "Output format (text, yaml)")
 }
