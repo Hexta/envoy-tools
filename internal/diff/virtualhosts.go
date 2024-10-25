@@ -8,6 +8,7 @@ import (
 )
 
 type VirtualHostsDiffOptions struct {
+	RouteConfigName      string
 	IncludedVirtualHosts []string
 }
 
@@ -26,69 +27,41 @@ func VirtualHosts(a map[string]interface{}, b map[string]interface{}, opts Virtu
 	removed := make([]string, 0)
 	modified := make(map[string]string)
 
-	// TODO: check all route configs
-	rtA := a["default"]
-	rtB := b["default"]
-
-	rtmA := rtA.(map[string]interface{})
-	rtmB := rtB.(map[string]interface{})
-
-	vhA, ok := rtmA["virtualHosts"]
-	if !ok {
-		return nil, fmt.Errorf("RDS config has no VirtualHosts field")
+	// Extract route configs for both maps
+	routeConfigA, err := extractRouteConfig(a, opts.RouteConfigName)
+	if err != nil {
+		return nil, err
 	}
 
-	vhB, ok := rtmB["virtualHosts"]
-	if !ok {
-		return nil, fmt.Errorf("RDS config has no VirtualHosts field")
+	routeConfigB, err := extractRouteConfig(b, opts.RouteConfigName)
+	if err != nil {
+		return nil, err
 	}
 
-	vhlA := vhA.([]interface{})
-	vhlB := vhB.([]interface{})
+	hostNamesA, hostsMapA, err := extractVirtualHosts(routeConfigA)
+	if err != nil {
+		return nil, err
+	}
 
-	vhNamesA := make([]string, 0, len(vhlA))
-	vhNamesB := make([]string, 0, len(vhlB))
-
-	vhmA := make(map[string]interface{}, len(vhlA))
-	vhmB := make(map[string]interface{}, len(vhlB))
+	hostNamesB, hostsMapB, err := extractVirtualHosts(routeConfigB)
+	if err != nil {
+		return nil, err
+	}
 
 	reorderedMap := make(map[string]*LineMove)
-
 	includedHosts := opts.GetIncludedVirtualHostsAsMap()
 
-	for _, vhInfoInterface := range vhlA {
-		vhInfo := vhInfoInterface.(map[string]interface{})
-		vhNameI, ok := vhInfo["name"]
-		if !ok {
-			return nil, fmt.Errorf("virtual host has no name")
-		}
-		vhName := vhNameI.(string)
-		vhNamesA = append(vhNamesA, vhName)
-		vhmA[vhName] = vhInfo
-	}
-
-	for _, vhInfoInterface := range vhlB {
-		vhInfo := vhInfoInterface.(map[string]interface{})
-		vhNameI, ok := vhInfo["name"]
-		if !ok {
-			return nil, fmt.Errorf("virtual host has no name")
-		}
-		vhName := vhNameI.(string)
-		vhNamesB = append(vhNamesB, vhName)
-		vhmB[vhName] = vhInfo
-	}
-
-	for idx, vhName := range vhNamesA {
+	for idx, vhName := range hostNamesA {
 		if !isVirtualHostIncluded(vhName, includedHosts) {
 			continue
 		}
 
-		if _, ok := vhmB[vhName]; !ok {
+		if _, ok := hostsMapB[vhName]; !ok {
 			removed = append(removed, vhName)
 			continue
 		}
 
-		diffStr := cmp.Diff(vhmA[vhName], vhmB[vhName])
+		diffStr := cmp.Diff(hostsMapA[vhName], hostsMapB[vhName])
 
 		if diffStr == "" {
 			continue
@@ -96,17 +69,17 @@ func VirtualHosts(a map[string]interface{}, b map[string]interface{}, opts Virtu
 
 		modified[vhName] = diffStr
 
-		if idx < len(vhNamesB) && vhNamesB[idx] != vhName {
+		if idx < len(hostNamesB) && hostNamesB[idx] != vhName {
 			reorderedMap[vhName] = &LineMove{Line: vhName, OldPos: idx}
 		}
 	}
 
-	for idx, vhName := range vhNamesB {
+	for idx, vhName := range hostNamesB {
 		if !isVirtualHostIncluded(vhName, includedHosts) {
 			continue
 		}
 
-		if _, ok := vhmA[vhName]; !ok {
+		if _, ok := hostsMapA[vhName]; !ok {
 			added = append(added, vhName)
 			delete(reorderedMap, vhName)
 			continue
@@ -126,6 +99,7 @@ func VirtualHosts(a map[string]interface{}, b map[string]interface{}, opts Virtu
 	}, nil
 }
 
+// isVirtualHostIncluded checks if a virtual host is included based on filter options
 func isVirtualHostIncluded(vhName string, includedHosts map[string]struct{}) bool {
 	if len(includedHosts) == 0 {
 		return true
@@ -133,4 +107,42 @@ func isVirtualHostIncluded(vhName string, includedHosts map[string]struct{}) boo
 
 	_, ok := includedHosts[vhName]
 	return ok
+}
+
+// extractRouteConfig retrieves a route config map from a given configuration map
+func extractRouteConfig(configMap map[string]interface{}, routeConfigName string) (map[string]interface{}, error) {
+	rt, ok := configMap[routeConfigName]
+	if !ok {
+		return nil, fmt.Errorf("route config %s not found", routeConfigName)
+	}
+	rtMap, ok := rt.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("route config %s is not a valid map, got %T", routeConfigName, rt)
+	}
+	return rtMap, nil
+}
+
+// extractVirtualHosts normalizes the virtual host list into a map and list of names
+func extractVirtualHosts(routeConfig map[string]interface{}) ([]string, map[string]interface{}, error) {
+	hostsI, ok := routeConfig["virtualHosts"]
+	if !ok {
+		return nil, nil, fmt.Errorf("RDS config has no VirtualHosts field")
+	}
+
+	hosts := hostsI.([]interface{})
+
+	names := make([]string, 0, len(hosts))
+	hostByName := make(map[string]interface{}, len(hosts))
+
+	for _, hostI := range hosts {
+		host := hostI.(map[string]interface{})
+		nameI, ok := host["name"]
+		if !ok {
+			return nil, nil, fmt.Errorf("virtual host has no name")
+		}
+		name := nameI.(string)
+		names = append(names, name)
+		hostByName[name] = host
+	}
+	return names, hostByName, nil
 }

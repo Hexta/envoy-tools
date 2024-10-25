@@ -2,7 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-added-large-files
       - id: check-json
@@ -10,6 +10,7 @@ repos:
       - id: check-yaml
       - id: detect-private-key
       - id: end-of-file-fixer
+        exclude: docs/cli
       - id: trailing-whitespace
 
   - repo: https://github.com/dnephin/pre-commit-golang
@@ -34,6 +35,14 @@ repos:
           - pre-commit
 
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.19.3
+    rev: v8.21.1
     hooks:
       - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: gen_docs
+        name: Generate documentation
+        entry: make docs
+        language: system
+        pass_filenames: false

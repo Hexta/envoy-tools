@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -13,40 +14,52 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-var diffOptions = struct {
-	VirtualHosts []string
-	Indent       int
+var diffCmdOpts = struct {
+	VirtualHosts    []string
+	Indent          int
+	RouteConfigName string
+	Stats           bool
 }{}
 
 var diffCmd = &cobra.Command{
 	Use:   "diff IP:PORT IP:PORT",
 	Short: "Compare Envoy CDS configuration from two Envoy instances",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
-		urls := args
+	Example: `# Diff all virtual hosts
+$ envoy-tools cp rds diff 127.0.0.1:18000 127.0.0.1:18001
 
-		grpcCallOptions := []grpc.CallOption{grpc.MaxCallRecvMsgSize(config.CpCmdGlobalOptions.MaxGrpcMessageSize)}
-		grpcDialOptions := []grpc.DialOption{
-			grpc.WithTransportCredentials(insecure.NewCredentials()),
-		}
-
-		cmList := fetchAllRoutes(urls, grpcCallOptions, grpcDialOptions)
-
-		vhDiffOpts := diff.VirtualHostsDiffOptions{
-			IncludedVirtualHosts: diffOptions.VirtualHosts,
-		}
-
-		changes, err := diff.VirtualHosts(cmList[0], cmList[1], vhDiffOpts)
-		if err != nil {
-			log.WithError(err).Fatal("Failed to diff routes")
-		}
-
-		diff := diff.FormatChanges(changes, diffOptions.Indent)
-		fmt.Println(diff)
-	},
+# Diff specific virtual hosts
+$ envoy-tools cp rds diff 127.0.0.1:18000 127.0.0.1:18001 -r virtual-host-1 -r virtual-host-2
+`,
+	Run: diffCmdRunFunc,
 }
 
-func fetchAllRoutes(urls []string, grpcCallOptions []grpc.CallOption, grpcDialOptions []grpc.DialOption) []map[string]interface{} {
+func diffCmdRunFunc(cmd *cobra.Command, args []string) {
+	ctx := cmd.Context()
+	urls := args
+
+	grpcCallOptions := []grpc.CallOption{grpc.MaxCallRecvMsgSize(config.CpCmdGlobalOptions.MaxGrpcMessageSize)}
+	grpcDialOptions := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+
+	cmList := fetchAllRoutes(ctx, urls, grpcCallOptions, grpcDialOptions)
+
+	vhDiffOpts := diff.VirtualHostsDiffOptions{
+		IncludedVirtualHosts: diffCmdOpts.VirtualHosts,
+		RouteConfigName:      diffCmdOpts.RouteConfigName,
+	}
+
+	changes, err := diff.VirtualHosts(cmList[0], cmList[1], vhDiffOpts)
+	if err != nil {
+		log.WithError(err).Fatal("Failed to diff routes")
+	}
+
+	diffStr := diff.FormatChanges(changes, diff.FormatOptions{Indent: diffCmdOpts.Indent, StatsOnly: diffCmdOpts.Stats})
+	fmt.Println(diffStr)
+}
+
+func fetchAllRoutes(ctx context.Context, urls []string, grpcCallOptions []grpc.CallOption, grpcDialOptions []grpc.DialOption) []map[string]interface{} {
 	cmList := make([]map[string]interface{}, 2)
 
 	var wg sync.WaitGroup
@@ -55,7 +68,7 @@ func fetchAllRoutes(urls []string, grpcCallOptions []grpc.CallOption, grpcDialOp
 		go func(idx int, url string) {
 			defer wg.Done()
 			xdsClient := util.NewXDSClient(url, grpcCallOptions, grpcDialOptions, config.CpCmdGlobalOptions.NodeID)
-			cm, err := util.FetchRoutesAsMap(xdsClient)
+			cm, err := util.FetchRoutesAsMap(ctx, xdsClient)
 			if err != nil {
 				log.WithError(err).Fatal("Failed to fetch routes")
 			}
@@ -68,6 +81,8 @@ func fetchAllRoutes(urls []string, grpcCallOptions []grpc.CallOption, grpcDialOp
 }
 
 func init() {
-	diffCmd.Flags().IntVarP(&diffOptions.Indent, "indent", "i", 4, "Indentation level")
-	diffCmd.Flags().StringSliceVarP(&diffOptions.VirtualHosts, "virtualhost", "r", []string{}, "Virtual host name")
+	diffCmd.Flags().IntVarP(&diffCmdOpts.Indent, "indent", "i", 4, "Indentation level")
+	diffCmd.Flags().StringSliceVarP(&diffCmdOpts.VirtualHosts, "virtualhost", "r", []string{}, "Virtual host name")
+	diffCmd.Flags().BoolVarP(&diffCmdOpts.Stats, "stats", "s", false, "Display stats only")
+	diffCmd.Flags().StringVar(&diffCmdOpts.RouteConfigName, "route-config-name", "default", "Route config name")
 }
