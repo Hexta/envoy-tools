@@ -1,9 +1,9 @@
 package format
 
-import yaml "github.com/goccy/go-yaml"
+import "github.com/goccy/go-yaml"
 
 func YAML(data interface{}) (string, error) {
-	bytes, err := yaml.Marshal(data)
+	bytes, err := yaml.MarshalWithOptions(data, yaml.UseLiteralStyleIfMultiline(true))
 	if err != nil {
 		return "", err
 	}
