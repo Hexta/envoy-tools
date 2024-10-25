@@ -14,7 +14,7 @@ go install github.com/Hexta/envoy-tools/cmd/envoy-tools@latest
 
 ### CLI
 
-[CLI Documentation](docs/cli/k8s-tools.md)
+[CLI Documentation](docs/cli/envoy-tools.md)
 
 ### Examples
 
