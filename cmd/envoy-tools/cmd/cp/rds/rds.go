@@ -9,4 +9,5 @@ var Cmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(diffCmd)
+	Cmd.AddCommand(showCmd)
 }

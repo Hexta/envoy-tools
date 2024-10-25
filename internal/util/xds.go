@@ -68,15 +68,15 @@ func (c *XDSClient) Close() error {
 	return c.conn.Close()
 }
 
-func (c *XDSClient) FetchClusters() (*discoveryv3.DiscoveryResponse, error) {
+func (c *XDSClient) FetchClusters(ctx context.Context) (*discoveryv3.DiscoveryResponse, error) {
 	return c.cdsClient.FetchClusters(
-		context.Background(), &discoveryv3.DiscoveryRequest{Node: &corev3.Node{Id: c.nodeId}}, c.grpcCallOptions...,
+		ctx, &discoveryv3.DiscoveryRequest{Node: &corev3.Node{Id: c.nodeId}}, c.grpcCallOptions...,
 	)
 }
 
-func (c *XDSClient) FetchRoutes() (*discoveryv3.DiscoveryResponse, error) {
+func (c *XDSClient) FetchRoutes(ctx context.Context) (*discoveryv3.DiscoveryResponse, error) {
 	return c.rdsClient.FetchRoutes(
-		context.Background(), &discoveryv3.DiscoveryRequest{Node: &corev3.Node{Id: c.nodeId}}, c.grpcCallOptions...,
+		ctx, &discoveryv3.DiscoveryRequest{Node: &corev3.Node{Id: c.nodeId}}, c.grpcCallOptions...,
 	)
 }
 
@@ -102,10 +102,10 @@ func DiscoveryResourcesAsMap(clusters *discoveryv3.DiscoveryResponse) (map[strin
 				return resourcesMap, err
 			}
 
-			resourcesMap[mt.GetName()] = pbs.AsMap()
 			if mt.GetName() == "" {
 				log.Errorf("Clusters name is empty")
 			}
+			resourcesMap[mt.GetName()] = pbs.AsMap()
 
 		case *routev3.RouteConfiguration:
 			buff, err := protojson.Marshal(resource)
@@ -119,6 +119,9 @@ func DiscoveryResourcesAsMap(clusters *discoveryv3.DiscoveryResponse) (map[strin
 				return resourcesMap, err
 			}
 
+			if mt.GetName() == "" {
+				log.Errorf("Routes Configuration name is empty")
+			}
 			resourcesMap[mt.GetName()] = pbs.AsMap()
 		}
 	}
@@ -126,34 +129,34 @@ func DiscoveryResourcesAsMap(clusters *discoveryv3.DiscoveryResponse) (map[strin
 	return resourcesMap, nil
 }
 
-func FetchClusters(client *XDSClient) (*discoveryv3.DiscoveryResponse, error) {
+func FetchClusters(ctx context.Context, client *XDSClient) (*discoveryv3.DiscoveryResponse, error) {
 	err := client.Connect()
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to xDS API: %w", err)
 	}
 
-	return client.FetchClusters()
+	return client.FetchClusters(ctx)
 }
 
-func FetchClustersAsMap(client *XDSClient) (map[string]interface{}, error) {
-	clusters, err := FetchClusters(client)
+func FetchClustersAsMap(ctx context.Context, client *XDSClient) (map[string]interface{}, error) {
+	clusters, err := FetchClusters(ctx, client)
 	if err != nil {
 		return nil, err
 	}
 	return DiscoveryResourcesAsMap(clusters)
 }
 
-func FetchRoutes(client *XDSClient) (*discoveryv3.DiscoveryResponse, error) {
+func FetchRoutes(ctx context.Context, client *XDSClient) (*discoveryv3.DiscoveryResponse, error) {
 	err := client.Connect()
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to xDS API: %w", err)
 	}
 
-	return client.FetchRoutes()
+	return client.FetchRoutes(ctx)
 }
 
-func FetchRoutesAsMap(client *XDSClient) (map[string]interface{}, error) {
-	routes, err := FetchRoutes(client)
+func FetchRoutesAsMap(ctx context.Context, client *XDSClient) (map[string]interface{}, error) {
+	routes, err := FetchRoutes(ctx, client)
 	if err != nil {
 		return nil, err
 	}

@@ -12,6 +12,10 @@ go install github.com/Hexta/envoy-tools/cmd/envoy-tools@latest
 
 ## Usage
 
+### CLI
+
+[CLI Documentation](docs/cli/k8s-tools.md)
+
 ### Examples
 
 * Compare CDS configuration returned by Envoy Control Plane `envoy-cp-first` and `envoy-cp-second`

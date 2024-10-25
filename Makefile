@@ -1,7 +1,6 @@
 CI_VERSION = $(shell git describe --tags --abbrev=8 --dirty --always --long)
 
-LDFLAGS := -w -s
-LDFLAGS := "$(LDFLAGS) -X 'github.com/Hexta/envoy-tools/pkg/version.version=${CI_VERSION}'"
+LDFLAGS := "-w -s"
 
 BIN_NAME_SUFFIX :=
 
@@ -25,3 +24,7 @@ test:
 .PHONY: lint
 lint:
 	@golangci-lint run -v ./...
+
+.PHONY: docs
+docs: build
+	@./dist/envoy-tools docs generate

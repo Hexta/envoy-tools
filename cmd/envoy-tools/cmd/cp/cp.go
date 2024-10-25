@@ -10,7 +10,7 @@ import (
 
 var Cmd = &cobra.Command{
 	Use:   "cp",
-	Short: "Compare Envoy Control Plane configs",
+	Short: "Envoy Control Plane tools",
 	Run: func(cmd *cobra.Command, args []string) {
 	},
 }

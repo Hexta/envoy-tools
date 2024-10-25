@@ -33,6 +33,9 @@ func Clusters(a map[string]interface{}, b map[string]interface{}, opts ClustersD
 			removed = append(removed, clusterName)
 		} else {
 			diffStr := cmp.Diff(a[clusterName], b[clusterName])
+			if diffStr == "" {
+				continue
+			}
 			modified[clusterName] = diffStr
 		}
 	}
