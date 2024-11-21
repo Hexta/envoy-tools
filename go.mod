@@ -1,11 +1,12 @@
 module github.com/Hexta/envoy-tools
 
-go 1.23.2
+go 1.23.3
 
 require (
 	github.com/envoyproxy/go-control-plane v0.13.1
 	github.com/goccy/go-yaml v1.13.7
 	github.com/google/go-cmp v0.6.0
+	github.com/itchyny/gojq v0.12.16
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
@@ -20,6 +21,7 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.1.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/itchyny/timefmt-go v0.1.6 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect

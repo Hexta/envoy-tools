@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Hexta/envoy-tools/internal/config"
 	_ "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	clusterv3 "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	_ "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
@@ -30,7 +31,7 @@ var grpcDialOptions = []grpc.DialOption{
 type XDSClient struct {
 	cdsClient       cdspbv3.ClusterDiscoveryServiceClient
 	rdsClient       rdspbv3.RouteDiscoveryServiceClient
-	nodeId          string
+	nodeID          string
 	url             string
 	conn            *grpc.ClientConn
 	grpcCallOptions []grpc.CallOption
@@ -47,7 +48,25 @@ func NewXDSClient(
 		grpcCallOptions: callOptions,
 		grpcDialOptions: dialOptions,
 		url:             url,
-		nodeId:          nodeId,
+		nodeID:          nodeId,
+	}
+}
+
+func NewXDSClientFromConfig(
+	url string,
+) *XDSClient {
+	callOptions := []grpc.CallOption{grpc.MaxCallRecvMsgSize(config.CpCmdGlobalOptions.MaxGrpcMessageSize)}
+	dialOptions := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+
+	nodeID := config.CpCmdGlobalOptions.NodeID
+
+	return &XDSClient{
+		grpcCallOptions: callOptions,
+		grpcDialOptions: dialOptions,
+		url:             url,
+		nodeID:          nodeID,
 	}
 }
 
@@ -70,13 +89,13 @@ func (c *XDSClient) Close() error {
 
 func (c *XDSClient) FetchClusters(ctx context.Context) (*discoveryv3.DiscoveryResponse, error) {
 	return c.cdsClient.FetchClusters(
-		ctx, &discoveryv3.DiscoveryRequest{Node: &corev3.Node{Id: c.nodeId}}, c.grpcCallOptions...,
+		ctx, &discoveryv3.DiscoveryRequest{Node: &corev3.Node{Id: c.nodeID}}, c.grpcCallOptions...,
 	)
 }
 
 func (c *XDSClient) FetchRoutes(ctx context.Context) (*discoveryv3.DiscoveryResponse, error) {
 	return c.rdsClient.FetchRoutes(
-		ctx, &discoveryv3.DiscoveryRequest{Node: &corev3.Node{Id: c.nodeId}}, c.grpcCallOptions...,
+		ctx, &discoveryv3.DiscoveryRequest{Node: &corev3.Node{Id: c.nodeID}}, c.grpcCallOptions...,
 	)
 }
 

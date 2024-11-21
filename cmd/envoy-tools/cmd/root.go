@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/Hexta/envoy-tools/cmd/envoy-tools/cmd/cp"
+	"github.com/Hexta/envoy-tools/internal/config"
 	"github.com/Hexta/envoy-tools/internal/version"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -27,4 +28,6 @@ func Execute() {
 func init() {
 	rootCmd.AddCommand(cp.Cmd)
 	rootCmd.AddCommand(DocsCmd)
+
+	rootCmd.PersistentFlags().VarP(&config.CommonOptions.Format, "output", "o", "output format (json, yaml, text, jq)")
 }

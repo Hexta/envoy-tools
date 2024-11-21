@@ -8,6 +8,12 @@ Documentation for envoy-tools
   -h, --help   help for docs
 ```
 
+### Options inherited from parent commands
+
+```
+  -o, --output Format   output format (json, yaml, text, jq) (default yaml)
+```
+
 ### SEE ALSO
 
 * [envoy-tools](envoy-tools.md)	 - Envoy toolbox

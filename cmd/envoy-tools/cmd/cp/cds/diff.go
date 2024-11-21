@@ -3,7 +3,6 @@ package cds
 import (
 	"context"
 	"fmt"
-	"os"
 	"sync"
 
 	"github.com/Hexta/envoy-tools/internal/config"
@@ -12,15 +11,12 @@ import (
 	"github.com/Hexta/envoy-tools/internal/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 var diffCmdOpts = struct {
-	Clusters     []string
-	Indent       int
-	OutputFormat string
-	Stats        bool
+	Clusters []string
+	Indent   int
+	Stats    bool
 }{}
 
 var diffCmd = &cobra.Command{
@@ -40,12 +36,7 @@ func diffCmdRunFunc(cmd *cobra.Command, args []string) {
 	ctx := cmd.Context()
 	urls := args
 
-	grpcCallOptions := []grpc.CallOption{grpc.MaxCallRecvMsgSize(config.CpCmdGlobalOptions.MaxGrpcMessageSize)}
-	grpcDialOptions := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	}
-
-	cmList := fetchAllClusters(ctx, urls, grpcCallOptions, grpcDialOptions)
+	cmList := fetchAllClusters(ctx, urls)
 
 	clsDiffOpts := diff.ClustersDiffOptions{
 		IncludedClusters: diffCmdOpts.Clusters,
@@ -56,25 +47,16 @@ func diffCmdRunFunc(cmd *cobra.Command, args []string) {
 		log.WithError(err).Fatal("Failed to diff clusters")
 	}
 
-	var diffStr string
-
-	switch diffCmdOpts.OutputFormat {
-	case "text":
-		diffStr = format.ChangesAsText(changes, format.Options{Indent: diffCmdOpts.Indent, StatsOnly: diffCmdOpts.Stats})
-	case "yaml":
-		diffStr, err = format.YAML(changes)
-		if err != nil {
-			log.WithError(err).Fatal("Failed to format changes")
-			os.Exit(1)
-		}
-	default:
-		log.Fatalf("Unknown output format: %s", diffCmdOpts.OutputFormat)
+	formatOpts := format.Options{Indent: diffCmdOpts.Indent, StatsOnly: diffCmdOpts.Stats}
+	diffStr, err := format.Apply(config.CommonOptions.Format, changes, formatOpts)
+	if err != nil {
+		log.WithError(err).Fatal("Failed to format changes")
 	}
 
-	fmt.Println(diffStr)
+	fmt.Print(diffStr)
 }
 
-func fetchAllClusters(ctx context.Context, urls []string, grpcCallOptions []grpc.CallOption, grpcDialOptions []grpc.DialOption) []map[string]interface{} {
+func fetchAllClusters(ctx context.Context, urls []string) []map[string]interface{} {
 	cmList := make([]map[string]interface{}, 2)
 
 	var wg sync.WaitGroup
@@ -82,7 +64,7 @@ func fetchAllClusters(ctx context.Context, urls []string, grpcCallOptions []grpc
 		wg.Add(1)
 		go func(idx int, url string) {
 			defer wg.Done()
-			xdsClient := util.NewXDSClient(url, grpcCallOptions, grpcDialOptions, config.CpCmdGlobalOptions.NodeID)
+			xdsClient := util.NewXDSClientFromConfig(url)
 			cm, err := util.FetchClustersAsMap(ctx, xdsClient)
 			if err != nil {
 				log.WithError(err).Fatal("Failed to fetch clusters")
@@ -99,5 +81,4 @@ func init() {
 	diffCmd.Flags().IntVarP(&diffCmdOpts.Indent, "indent", "i", 4, "Indentation level")
 	diffCmd.Flags().StringSliceVarP(&diffCmdOpts.Clusters, "cluster", "c", []string{}, "Cluster name")
 	diffCmd.Flags().BoolVarP(&diffCmdOpts.Stats, "stats", "s", false, "Display stats only")
-	diffCmd.Flags().StringVarP(&diffCmdOpts.OutputFormat, "output-format", "o", "text", "Output format (text, yaml)")
 }
