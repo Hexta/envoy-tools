@@ -8,8 +8,6 @@ import (
 	"github.com/Hexta/envoy-tools/internal/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 var showCmd = &cobra.Command{
@@ -34,12 +32,8 @@ func showCmdRunFunc(cmd *cobra.Command, args []string) {
 		clusters = args[1:]
 	}
 
-	grpcCallOptions := []grpc.CallOption{grpc.MaxCallRecvMsgSize(config.CpCmdGlobalOptions.MaxGrpcMessageSize)}
-	grpcDialOptions := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	}
+	xdsClient := util.NewXDSClientFromConfig(url)
 
-	xdsClient := util.NewXDSClient(url, grpcCallOptions, grpcDialOptions, config.CpCmdGlobalOptions.NodeID)
 	cm, err := util.FetchClustersAsMap(ctx, xdsClient)
 	if err != nil {
 		log.WithError(err).Fatal("Failed to fetch clusters")
@@ -56,9 +50,11 @@ func showCmdRunFunc(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	yaml, err := format.YAML(data)
+	formatOpts := format.Options{Indent: diffCmdOpts.Indent, StatsOnly: diffCmdOpts.Stats}
+	output, err := format.Apply(config.CommonOptions.Format, data, formatOpts)
 	if err != nil {
-		log.WithError(err).Fatal("Failed to format as YAML")
+		log.WithError(err).Fatal("Failed to format changes")
 	}
-	fmt.Println(yaml)
+
+	fmt.Println(output)
 }

@@ -38,7 +38,8 @@ func ChangesAsText(changes *diff.Changes, opts Options) string {
 }
 
 func formatReordered(sb *strings.Builder, indent int, changes *diff.Changes) {
-	_, _ = fmt.Fprintf(sb, "%sreordered\n", strings.Repeat(" ", indent))
+	writeLine(sb, "reordered", indent)
+
 	for _, lineMove := range changes.Reordered {
 		_, err := fmt.Fprintf(
 			sb,
@@ -51,47 +52,44 @@ func formatReordered(sb *strings.Builder, indent int, changes *diff.Changes) {
 }
 
 func formatModified(sb *strings.Builder, indent int, changes *diff.Changes, opts Options) {
-	_, _ = fmt.Fprintf(sb, "%smodified\n", strings.Repeat(" ", indent))
+	writeLine(sb, "modified", indent)
+
 	names := maps.Keys(changes.Modified)
 	slices.Sort(names)
 
 	for _, name := range names {
-		_, err := fmt.Fprintf(sb, "%s%s\n", strings.Repeat(" ", 2*indent), name)
-		if err != nil {
-			continue
-		}
+		writeLine(sb, name, 2*indent)
 
 		if opts.StatsOnly {
 			continue
 		}
 
-		_, err = fmt.Fprintf(sb, "%s%s\n", strings.Repeat(" ", 3*indent), changes.Modified[name])
-		if err != nil {
-			continue
-		}
+		writeLine(sb, changes.Modified[name], 3*indent)
 	}
 }
 
 func formatRemoved(sb *strings.Builder, indent int, changes *diff.Changes) {
-	_, _ = fmt.Fprintf(sb, "%sremoved\n", strings.Repeat(" ", indent))
-	slices.Sort(changes.Removed)
+	writeLine(sb, "removed", indent)
 
-	for _, it := range changes.Removed {
-		_, err := fmt.Fprintf(sb, "%s%s\n", strings.Repeat(" ", 2*indent), it)
-		if err != nil {
-			continue
-		}
-	}
+	slices.Sort(changes.Removed)
+	writeLines(sb, changes.Removed, 2*indent)
 }
 
 func formatAdded(sb *strings.Builder, indent int, changes *diff.Changes) {
-	slices.Sort(changes.Added)
+	writeLine(sb, "added", indent)
 
-	_, _ = fmt.Fprintf(sb, "%sadded\n", strings.Repeat(" ", indent))
-	for _, it := range changes.Added {
-		_, err := fmt.Fprintf(sb, "%s%s\n", strings.Repeat(" ", 2*indent), it)
-		if err != nil {
-			continue
-		}
+	slices.Sort(changes.Added)
+	writeLines(sb, changes.Added, 2*indent)
+}
+
+// Helper to write a single indented line
+func writeLine(sb *strings.Builder, content string, indent int) {
+	_, _ = fmt.Fprintf(sb, "%s%s\n", strings.Repeat(" ", indent), content)
+}
+
+// Helper to write a list of lines with indentation
+func writeLines(sb *strings.Builder, items []string, indent int) {
+	for _, item := range items {
+		writeLine(sb, item, indent)
 	}
 }

@@ -9,7 +9,8 @@ envoy-tools [flags]
 ### Options
 
 ```
-  -h, --help   help for envoy-tools
+  -h, --help            help for envoy-tools
+  -o, --output Format   output format (json, yaml, text, jq) (default yaml)
 ```
 
 ### SEE ALSO

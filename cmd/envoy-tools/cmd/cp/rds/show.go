@@ -56,9 +56,11 @@ func showCmdRunFunc(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	yaml, err := format.YAML(data)
+	formatOpts := format.Options{Indent: diffCmdOpts.Indent, StatsOnly: diffCmdOpts.Stats}
+	output, err := format.Apply(config.CommonOptions.Format, data, formatOpts)
 	if err != nil {
-		log.WithError(err).Fatal("Failed to format as YAML")
+		log.WithError(err).Fatal("Failed to format changes")
 	}
-	fmt.Println(yaml)
+
+	fmt.Println(output)
 }

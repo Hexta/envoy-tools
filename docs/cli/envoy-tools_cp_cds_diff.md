@@ -20,11 +20,10 @@ $ envoy-tools cp cds diff 127.0.0.1:18000 127.0.0.1:18001 -c cluster-1 -c cluste
 ### Options
 
 ```
-  -c, --cluster strings        Cluster name
-  -h, --help                   help for diff
-  -i, --indent int             Indentation level (default 4)
-  -o, --output-format string   Output format (text, yaml) (default "text")
-  -s, --stats                  Display stats only
+  -c, --cluster strings   Cluster name
+  -h, --help              help for diff
+  -i, --indent int        Indentation level (default 4)
+  -s, --stats             Display stats only
 ```
 
 ### Options inherited from parent commands
@@ -32,6 +31,7 @@ $ envoy-tools cp cds diff 127.0.0.1:18000 127.0.0.1:18001 -c cluster-1 -c cluste
 ```
       --max-grpc-message-size int   Max size of gRPC message (default 104857600)
       --node-id string              Node id used in discovery requests
+  -o, --output Format               output format (json, yaml, text, jq) (default yaml)
 ```
 
 ### SEE ALSO

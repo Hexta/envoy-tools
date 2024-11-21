@@ -22,7 +22,6 @@ $ envoy-tools cp rds diff 127.0.0.1:18000 127.0.0.1:18001 -r virtual-host-1 -r v
 ```
   -h, --help                       help for diff
   -i, --indent int                 Indentation level (default 4)
-  -o, --output-format string       Output format (text, yaml) (default "text")
       --route-config-name string   Route config name (default "default")
   -s, --stats                      Display stats only
   -r, --virtualhost strings        Virtual host name
@@ -33,6 +32,7 @@ $ envoy-tools cp rds diff 127.0.0.1:18000 127.0.0.1:18001 -r virtual-host-1 -r v
 ```
       --max-grpc-message-size int   Max size of gRPC message (default 104857600)
       --node-id string              Node id used in discovery requests
+  -o, --output Format               output format (json, yaml, text, jq) (default yaml)
 ```
 
 ### SEE ALSO

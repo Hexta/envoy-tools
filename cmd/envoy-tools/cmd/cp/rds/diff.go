@@ -3,7 +3,6 @@ package rds
 import (
 	"context"
 	"fmt"
-	"os"
 	"sync"
 
 	"github.com/Hexta/envoy-tools/internal/config"
@@ -18,7 +17,6 @@ import (
 
 var diffCmdOpts = struct {
 	Indent          int
-	OutputFormat    string
 	RouteConfigName string
 	Stats           bool
 	VirtualHosts    []string
@@ -58,19 +56,10 @@ func diffCmdRunFunc(cmd *cobra.Command, args []string) {
 		log.WithError(err).Fatal("Failed to diff routes")
 	}
 
-	var diffStr string
-
-	switch diffCmdOpts.OutputFormat {
-	case "text":
-		diffStr = format.ChangesAsText(changes, format.Options{Indent: diffCmdOpts.Indent, StatsOnly: diffCmdOpts.Stats})
-	case "yaml":
-		diffStr, err = format.YAML(changes)
-		if err != nil {
-			log.WithError(err).Fatal("Failed to format changes")
-			os.Exit(1)
-		}
-	default:
-		log.Fatalf("Unknown output format: %s", diffCmdOpts.OutputFormat)
+	formatOpts := format.Options{Indent: diffCmdOpts.Indent, StatsOnly: diffCmdOpts.Stats}
+	diffStr, err := format.Apply(config.CommonOptions.Format, changes, formatOpts)
+	if err != nil {
+		log.WithError(err).Fatal("Failed to format changes")
 	}
 
 	fmt.Println(diffStr)
@@ -102,5 +91,4 @@ func init() {
 	diffCmd.Flags().StringSliceVarP(&diffCmdOpts.VirtualHosts, "virtualhost", "r", []string{}, "Virtual host name")
 	diffCmd.Flags().BoolVarP(&diffCmdOpts.Stats, "stats", "s", false, "Display stats only")
 	diffCmd.Flags().StringVar(&diffCmdOpts.RouteConfigName, "route-config-name", "default", "Route config name")
-	diffCmd.Flags().StringVarP(&diffCmdOpts.OutputFormat, "output-format", "o", "text", "Output format (text, yaml)")
 }

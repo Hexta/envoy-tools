@@ -14,6 +14,12 @@ envoy-tools cp [flags]
       --node-id string              Node id used in discovery requests
 ```
 
+### Options inherited from parent commands
+
+```
+  -o, --output Format   output format (json, yaml, text, jq) (default yaml)
+```
+
 ### SEE ALSO
 
 * [envoy-tools](envoy-tools.md)	 - Envoy toolbox

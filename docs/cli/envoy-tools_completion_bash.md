@@ -37,6 +37,12 @@ envoy-tools completion bash
       --no-descriptions   disable completion descriptions
 ```
 
+### Options inherited from parent commands
+
+```
+  -o, --output Format   output format (json, yaml, text, jq) (default yaml)
+```
+
 ### SEE ALSO
 
 * [envoy-tools completion](envoy-tools_completion.md)	 - Generate the autocompletion script for the specified shell

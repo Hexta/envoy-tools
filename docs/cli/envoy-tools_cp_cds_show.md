@@ -28,6 +28,7 @@ $ envoy-tools cp cds show 127.0.0.1:18000 cluster1 cluster2
 ```
       --max-grpc-message-size int   Max size of gRPC message (default 104857600)
       --node-id string              Node id used in discovery requests
+  -o, --output Format               output format (json, yaml, text, jq) (default yaml)
 ```
 
 ### SEE ALSO
