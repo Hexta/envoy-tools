@@ -3,7 +3,7 @@ name: Pre-commit auto-update
 on:
   workflow_dispatch:
   schedule:
-    - cron: 0 8 1 * * # Every first day of month at 08:00 UTC
+    - cron: 0 8 1 * * # Every first day of the month at 08:00 UTC
 jobs:
   auto-update:
     permissions:
@@ -17,7 +17,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: "3.13"
           cache: pip
 
       - name: Install pre-commit
@@ -27,6 +27,11 @@ jobs:
         run: pre-commit autoupdate
 
       - name: Create Pull Request
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: peter-evans/create-pull-request@v7
         with:
-          commit_message: pre-commit auto-update
+          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          branch: auto-update-pre-commit-hooks
+          title: Auto-update pre-commit hooks
+          commit-message: Auto-update pre-commit hooks
+          body: Update pre-commit tools to the latest version
+          labels: dependencies
