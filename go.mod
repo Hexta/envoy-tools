@@ -1,6 +1,6 @@
 module github.com/Hexta/envoy-tools
 
-go 1.23.3
+go 1.23.5
 
 require (
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4
