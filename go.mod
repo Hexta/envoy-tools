@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	github.com/envoyproxy/go-control-plane/envoy v1.32.3
-	github.com/goccy/go-yaml v1.15.13
+	github.com/goccy/go-yaml v1.15.17
 	github.com/google/go-cmp v0.6.0
 	github.com/itchyny/gojq v0.12.17
 	github.com/sirupsen/logrus v1.9.3
