@@ -1,10 +1,11 @@
 module github.com/Hexta/envoy-tools
 
 go 1.23.5
+toolchain go1.24.1
 
 require (
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4
-	github.com/goccy/go-yaml v1.15.23
+	github.com/goccy/go-yaml v1.16.0
 	github.com/google/go-cmp v0.7.0
 	github.com/itchyny/gojq v0.12.17
 	github.com/sirupsen/logrus v1.9.3
