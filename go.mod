@@ -1,6 +1,7 @@
 module github.com/Hexta/envoy-tools
 
 go 1.24.1
+
 require (
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4
 	github.com/goccy/go-yaml v1.16.0
@@ -9,7 +10,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.6
 )
 
