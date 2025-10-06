@@ -3,7 +3,7 @@ module github.com/Hexta/envoy-tools
 go 1.24.3
 
 require (
-	github.com/envoyproxy/go-control-plane/envoy v1.32.4
+	github.com/envoyproxy/go-control-plane/envoy v1.35.0
 	github.com/goccy/go-yaml v1.18.0
 	github.com/google/go-cmp v0.7.0
 	github.com/itchyny/gojq v0.12.17
