@@ -7,7 +7,7 @@ require (
 	github.com/goccy/go-yaml v1.19.2
 	github.com/google/go-cmp v0.7.0
 	github.com/itchyny/gojq v0.12.19
-	github.com/sirupsen/logrus v1.9.4
+	github.com/sirupsen/logrus v1.10.0
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	google.golang.org/grpc v1.81.1
